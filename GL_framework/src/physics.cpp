@@ -28,8 +28,8 @@ int clothLength = col*row; // 14*18=252
 
 class Particle {
 public:
-	glm::vec3 initPos; //x
-	glm::vec3 pos;
+	glm::vec3 initPos; //x0
+	glm::vec3 pos; //x
 	float yPos;
 	glm::vec3 direction;//Maybe in another class
 };
@@ -43,7 +43,7 @@ public:
 	glm::vec3 k;//Wave vector
 	glm::vec3 Φ;//Phi, desplaça el punt d'inici de la wave
 };
-int numberOfWaves = 1;
+int numberOfWaves = 1; //de moment no ho fem servir
 Wave w1;
 
 float springColumn = 0.76f;
@@ -51,10 +51,10 @@ float springRow = 0.58f;
 float fluidHeight = 3;
 
 void initializeCloth() {
-	fluidSurface[0].initPos = { -(13 * springColumn / 2),fluidHeight,-(17 * springRow / 2) };
+	fluidSurface[0].initPos = fluidSurface[0].pos = { -(13 * springColumn / 2),fluidHeight,-(17 * springRow / 2) };
 	for (int i = 0; i < row; ++i) {
 		for (int j = 0; j < col; ++j) {
-			fluidSurface[i*col + j].initPos = { fluidSurface[0].initPos.x + j*springColumn ,fluidSurface[0].initPos.y ,fluidSurface[0].initPos.z + i*springRow };
+			fluidSurface[i*col + j].initPos = fluidSurface[i*col + j].pos = { fluidSurface[0].initPos.x + j*springColumn ,fluidHeight ,fluidSurface[0].initPos.z + i*springRow };
 			
 		}
 	}
@@ -62,17 +62,16 @@ void initializeCloth() {
 
 void particleToFloatConverter() {
 	for (int i = 0; i < 252; ++i) {
-		vertArray[i * 3 + 0] = fluidSurface[i].initPos.x;
+		vertArray[i * 3 + 0] = fluidSurface[i].pos.x;
 		vertArray[i * 3 + 1] = fluidSurface[i].yPos;
-		vertArray[i * 3 + 2] = fluidSurface[i].initPos.z;
+		vertArray[i * 3 + 2] = fluidSurface[i].pos.z;
 	}
 }
 
 void updateWavePos(float time) {
 	for(int i = 0; i < 252; ++i){
-		fluidSurface[i].initPos = prePos - (w1.k / glm::length(w1.k))  * w1.A * glm::sin(glm::dot(w1.k, prePos) - (w1.w * time));
-		fluidSurface[i].initPos.y = 0;
-		fluidSurface[i].yPos = w1.A * glm::cos(glm::dot(w1.k, prePos) - (w1.w * time));
+		fluidSurface[i].pos = fluidSurface[i].initPos - (w1.k / glm::length(w1.k))  * w1.A * glm::sin(glm::dot(w1.k, fluidSurface[i].initPos) - (w1.w * time));
+		fluidSurface[i].yPos = w1.A * glm::cos(glm::dot(w1.k, fluidSurface[i].initPos) - (w1.w * time));
 	}
 	
 }
@@ -81,7 +80,7 @@ void PhysicsInit() {
 	initializeCloth();
 	w1.A = 1.f;
 	w1.k = {0.3, 0, 0};
-	w1.w = 10.f;
+	w1.w = 0.1f;
 }
 void PhysicsUpdate(float dt) {
 	//TODO
