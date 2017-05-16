@@ -28,7 +28,8 @@ int clothLength = col*row; // 14*18=252
 
 class Particle {
 public:
-	glm::vec3 pos; //x
+	glm::vec3 initPos; //x
+	glm::vec3 pos;
 	float yPos;
 	glm::vec3 direction;//Maybe in another class
 };
@@ -50,28 +51,27 @@ float springRow = 0.58f;
 float fluidHeight = 3;
 
 void initializeCloth() {
-	fluidSurface[0].pos = { -(13 * springColumn / 2),fluidHeight,-(17 * springRow / 2) };
+	fluidSurface[0].initPos = { -(13 * springColumn / 2),fluidHeight,-(17 * springRow / 2) };
 	for (int i = 0; i < row; ++i) {
 		for (int j = 0; j < col; ++j) {
-			fluidSurface[i*col + j].pos = { fluidSurface[0].pos.x + j*springColumn ,fluidSurface[0].pos.y ,fluidSurface[0].pos.z + i*springRow };
+			fluidSurface[i*col + j].initPos = { fluidSurface[0].initPos.x + j*springColumn ,fluidSurface[0].initPos.y ,fluidSurface[0].initPos.z + i*springRow };
+			
 		}
 	}
 }
 
 void particleToFloatConverter() {
 	for (int i = 0; i < 252; ++i) {
-		vertArray[i * 3 + 0] = fluidSurface[i].pos.x;
+		vertArray[i * 3 + 0] = fluidSurface[i].initPos.x;
 		vertArray[i * 3 + 1] = fluidSurface[i].yPos;
-		vertArray[i * 3 + 2] = fluidSurface[i].pos.z;
+		vertArray[i * 3 + 2] = fluidSurface[i].initPos.z;
 	}
 }
 
 void updateWavePos(float time) {
-	glm::vec3 prePos;
 	for(int i = 0; i < 252; ++i){
-		prePos = fluidSurface[i].pos;
-		fluidSurface[i].pos = prePos - (w1.k / glm::length(w1.k))  * w1.A * glm::sin(glm::dot(w1.k, prePos) - (w1.w * time));
-		fluidSurface[i].pos.y = 0;
+		fluidSurface[i].initPos = prePos - (w1.k / glm::length(w1.k))  * w1.A * glm::sin(glm::dot(w1.k, prePos) - (w1.w * time));
+		fluidSurface[i].initPos.y = 0;
 		fluidSurface[i].yPos = w1.A * glm::cos(glm::dot(w1.k, prePos) - (w1.w * time));
 	}
 	
