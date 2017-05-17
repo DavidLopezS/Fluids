@@ -95,6 +95,18 @@ void manageWave(float a, float wX, float wZ, float f, int waveN) {
 void PhysicsInit() {
 	initializeCloth();
 	//Possar valors predeterminats de la onada
+	ampli[0] = 0.5;
+	ampli[1] = 0.5;
+	ampli[2] = 0.5;
+	freq[0] = 1;
+	freq[1] = 1;
+	freq[2] = 1;
+	waveX[0] = 0.1;
+	waveX[1] = 0.1;
+	waveX[2] = 0.1;
+	waveZ[0] = 0.1;
+	waveZ[1] = 0.1;
+	waveZ[2] = 0.1;
 }
 
 float acumulateTime;
@@ -127,12 +139,11 @@ void GUI() {
 		ImGui::Separator();
 		ImGui::Text("Waves parameters: ");
 		ImGui::Text("   Wave 1      Wave 2       Wave 3");
-
-
+		ImGui::Separator();
 		ImGui::SliderFloat3("Amplitude", ampli, 0.f, 1.f, "%.1f");
 		ImGui::SliderFloat3("Wave X", waveX, 0.f, 1.f, "%.2f");
 		ImGui::SliderFloat3("Wave Z", waveZ, 0.f, 1.f, "%.2f");
-		ImGui::SliderFloat3("Frequency", freq, 0.f, 100.f, "%.3f");
+		ImGui::SliderFloat3("Frequency", freq, 0.f, 10.f, "%.3f");
 
 		
 	}
