@@ -42,8 +42,13 @@ public:
 	float w;//Omega
 	glm::vec3 k;//Wave vector
 };
-int numberOfWaves = 1; //de moment no ho fem servir
-Wave w1;
+int numberOfWaves = 3;
+Wave* waves = new Wave[numberOfWaves];
+
+float* ampli = new float[numberOfWaves];
+float* waveX = new float[numberOfWaves];
+float* waveZ = new float[numberOfWaves];
+float* freq = new float[numberOfWaves];
 
 float springColumn = 0.76f;
 float springRow = 0.58f;
@@ -69,23 +74,39 @@ void particleToFloatConverter() {
 
 void updateWavePos(float time) {
 	for(int i = 0; i < 252; ++i){
-		fluidSurface[i].pos = fluidSurface[i].initPos - (w1.k / glm::length(w1.k))  * w1.A * glm::sin(glm::dot(w1.k, fluidSurface[i].initPos) - (w1.w * time));
-		fluidSurface[i].yPos = fluidHeight + w1.A * glm::cos(glm::dot(w1.k, fluidSurface[i].initPos) - (w1.w * time));
+		fluidSurface[i].pos = - fluidSurface[i].initPos;
+		fluidSurface[i].yPos = fluidHeight;
+		for (int j = 0; j < numberOfWaves; ++j) {
+			fluidSurface[i].pos += (waves[j].k / glm::length(waves[j].k))  * waves[j].A * glm::sin(glm::dot(waves[j].k, fluidSurface[i].initPos) - (waves[j].w * time));
+			fluidSurface[i].yPos += waves[j].A * glm::cos(glm::dot(waves[j].k, fluidSurface[i].initPos) - (waves[j].w * time));
+		}
 	}
-	
+}
+
+void manageWave(float a, float wX, float wZ, float f, int waveN) {
+
+	waves[waveN].A = a;
+	waves[waveN].k.x = wX;
+	waves[waveN].k.z = wZ;
+	waves[waveN].w = f;
+
 }
 
 void PhysicsInit() {
 	initializeCloth();
-	w1.A = 1.f;
-	w1.k = {0.3, 0, 0};
-	w1.w = 1.f;
+	//Possar valors predeterminats de la onada
 }
 
 float acumulateTime;
 void PhysicsUpdate(float dt) {
 	//TODO
+	for (int i = 0; i < numberOfWaves; ++i) {
+		manageWave(ampli[i], waveX[i], waveZ[i], freq[i], i);
+	}
 	acumulateTime += dt;
+	if (acumulateTime >= 3.14) {
+		acumulateTime == 0;
+	}
 	updateWavePos(acumulateTime);
 	particleToFloatConverter();
 	ClothMesh::updateClothMesh(vertArray);
@@ -93,13 +114,27 @@ void PhysicsUpdate(float dt) {
 void PhysicsCleanup() {
 	delete[] fluidSurface;
 	delete[] vertArray;
+	delete[] waves;
+	delete[] ampli;
+	delete[] waveX;
+	delete[] waveZ;
+	delete[] freq;
 }
 
 void GUI() {
 	{	//FrameRate
 		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+		ImGui::Separator();
+		ImGui::Text("Waves parameters: ");
+		ImGui::Text("   Wave 1      Wave 2       Wave 3");
 
-		//TODO
+
+		ImGui::SliderFloat3("Amplitude", ampli, 0.f, 1.f, "%.1f");
+		ImGui::SliderFloat3("Wave X", waveX, 0.f, 1.f, "%.2f");
+		ImGui::SliderFloat3("Wave Z", waveZ, 0.f, 1.f, "%.2f");
+		ImGui::SliderFloat3("Frequency", freq, 0.f, 100.f, "%.3f");
+
+		
 	}
 
 	// ImGui test window. Most of the sample code is in ImGui::ShowTestWindow()
