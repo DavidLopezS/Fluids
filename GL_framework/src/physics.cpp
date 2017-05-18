@@ -10,18 +10,18 @@
 
 bool show_test_window = false;
 
-float sphereRadius = rand() % 3 + 0.5f;
-glm::vec3 spherePos(rand() % 7 - 3, rand() % 7 + 1 - sphereRadius, rand() % 7 - 3);
+//float sphereRadius = rand() % 3 + 0.5f;
+//glm::vec3 spherePos = { rand() % 7 - 3, rand() % 7 + 1 - sphereRadius, rand() % 7 - 3 };
+//glm::vec3 gravity = { 0, -9.8f, 0 };
+float gravity = -9.8;
 
 namespace Sphere {
-	extern void updateSphere(glm::vec3 pos = spherePos, float radius = sphereRadius);
+	extern void updateSphere(glm::vec3 pos /*= spherePos*/, float radius /*= sphereRadius*/);
 }
 
 namespace ClothMesh {
 	extern void updateClothMesh(float *array_data);
 }
-
-glm::vec3 gravity = { 0, -9.8f, 0 };
 
 int col = 14, row = 18;
 int clothLength = col*row; // 14*18=252
@@ -53,6 +53,13 @@ float* freq = new float[numberOfWaves];
 float springColumn = 0.76f;
 float springRow = 0.58f;
 float fluidHeight = 3;
+
+class Ball {
+public:
+	float p;//Desnity
+	float Vsub;//Volume of the sphere that is flooded
+
+};
 
 void initializeCloth() {
 	fluidSurface[0].initPos = fluidSurface[0].pos = { -(13 * springColumn / 2), 0,-(17 * springRow / 2) };
@@ -110,6 +117,8 @@ void PhysicsInit() {
 }
 
 float acumulateTime;
+float seconds = 0;
+float secondsUntilRestart = 20;
 void PhysicsUpdate(float dt) {
 	//TODO
 	for (int i = 0; i < numberOfWaves; ++i) {
@@ -122,6 +131,11 @@ void PhysicsUpdate(float dt) {
 	updateWavePos(acumulateTime);
 	particleToFloatConverter();
 	ClothMesh::updateClothMesh(vertArray);
+
+	float sphereRadius = 2;
+	glm::vec3 spherePos = { 0, 8, 0 };
+	Sphere::updateSphere(spherePos, sphereRadius);
+
 }
 void PhysicsCleanup() {
 	delete[] fluidSurface;
@@ -139,11 +153,12 @@ void GUI() {
 		ImGui::Separator();
 		ImGui::Text("Waves parameters: ");
 		ImGui::Text("   Wave 1      Wave 2       Wave 3");
-		ImGui::Separator();
 		ImGui::SliderFloat3("Amplitude", ampli, 0.f, 1.f, "%.1f");
 		ImGui::SliderFloat3("Wave X", waveX, 0.f, 1.f, "%.2f");
 		ImGui::SliderFloat3("Wave Z", waveZ, 0.f, 1.f, "%.2f");
 		ImGui::SliderFloat3("Frequency", freq, 0.f, 10.f, "%.3f");
+		ImGui::Separator();
+		ImGui::Text("Sphere parameters: ");
 
 		
 	}
