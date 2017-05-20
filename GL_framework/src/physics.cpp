@@ -10,10 +10,9 @@
 
 bool show_test_window = false;
 
-//float sphereRadius = rand() % 3 + 0.5f;
-//glm::vec3 spherePos = { rand() % 7 - 3, rand() % 7 + 1 - sphereRadius, rand() % 7 - 3 };
-//glm::vec3 gravity = { 0, -9.8f, 0 };
-float gravity = -9.8;
+float sphereRadius = rand() % 3 + 0.5f;
+glm::vec3 spherePos = { rand() % 7 - 3, rand() % 7 + 1 - sphereRadius, rand() % 7 - 3 };
+float gravity = 9.8;
 
 namespace Sphere {
 	extern void updateSphere(glm::vec3 pos /*= spherePos*/, float radius /*= sphereRadius*/);
@@ -56,6 +55,10 @@ float fluidHeight = 3;
 
 class Ball {
 public:
+	glm::vec3 pos = {0, 8, 0};//Posicio incial de l'esfera
+	glm::vec3 velocity;
+	float bForce;//Bouyancy force
+	float dForce;//Drag force
 	float p;//Desnity
 	float Vsub;//Volume of the sphere that is flooded
 
@@ -99,6 +102,24 @@ void manageWave(float a, float wX, float wZ, float f, int waveN) {
 
 }
 
+Ball sphere;
+void moveBall(float time) {
+	//Actualitzar la velocitat
+	sphere.velocity.x = sphere.velocity.x;
+	sphere.velocity.y = sphere.velocity.y - gravity * time;
+	sphere.velocity.z = sphere.velocity.z;
+
+	//Actualitzar posicio
+	sphere.pos.x = sphere.pos.x + sphere.velocity.x * time;
+	sphere.pos.y =  sphere.pos.y + sphere.velocity.y * time;
+	sphere.pos.z = sphere.pos.z + sphere.velocity.z * time;
+}
+
+void applyForces() {
+
+	sphere.bForce = sphere.p * gravity * sphere.Vsub;
+}
+
 void PhysicsInit() {
 	initializeCloth();
 	//Possar valors predeterminats de la onada
@@ -132,9 +153,9 @@ void PhysicsUpdate(float dt) {
 	particleToFloatConverter();
 	ClothMesh::updateClothMesh(vertArray);
 
-	float sphereRadius = 2;
-	glm::vec3 spherePos = { 0, 8, 0 };
-	Sphere::updateSphere(spherePos, sphereRadius);
+	float sphereRadius = 1;
+	moveBall(dt);
+	Sphere::updateSphere(sphere.pos, sphereRadius);
 
 }
 void PhysicsCleanup() {
