@@ -52,14 +52,14 @@ float* freq = new float[numberOfWaves];
 float springColumn = 0.76f;
 float springRow = 0.58f;
 float fluidHeight = 3;
+float fluidDensity = 10;
 
 class Ball {
 public:
 	glm::vec3 pos = {0, 8, 0};//Posicio incial de l'esfera
 	glm::vec3 velocity;
-	float bForce;//Bouyancy force
-	float dForce;//Drag force
-	float p;//Desnity
+	glm::vec3 totalForce{ 0, -gravity, 0 };
+	float mass = 1;
 	float Vsub;//Volume of the sphere that is flooded
 
 };
@@ -105,19 +105,28 @@ void manageWave(float a, float wX, float wZ, float f, int waveN) {
 Ball sphere;
 void moveBall(float time) {
 	//Actualitzar la velocitat
-	sphere.velocity.x = sphere.velocity.x;
-	sphere.velocity.y = sphere.velocity.y - gravity * time;
-	sphere.velocity.z = sphere.velocity.z;
+	sphere.velocity = sphere.velocity + sphere.totalForce*time/sphere.mass;
 
 	//Actualitzar posicio
-	sphere.pos.x = sphere.pos.x + sphere.velocity.x * time;
-	sphere.pos.y =  sphere.pos.y + sphere.velocity.y * time;
-	sphere.pos.z = sphere.pos.z + sphere.velocity.z * time;
+	sphere.pos = sphere.pos + sphere.velocity * time;
 }
 
+glm::vec3 buoyanceF, dragF;
+//http://www.1728.org/spher2.png +++++++++++ http://mathworld.wolfram.com/images/eps-gif/SphericalCap_1001.gif
 void applyForces() {
 
-	sphere.bForce = sphere.p * gravity * sphere.Vsub;
+	//if(sumergida 0,25,75,full%)... - apliquem les diferents formules que calguin
+
+	//calcular bouyance
+	float volume;
+	glm::vec3 multiplyOnY = { 0,1,0 };
+	buoyanceF = fluidDensity*gravity*multiplyOnY; //potser cal variar la densitat del fluid, potser la gravetat es negativa
+	//calcular drag force
+	dragF = { 0,0,0 };
+	//sumar totes les forces
+	sphere.totalForce = buoyanceF + dragF;
+
+	//sphere.bForce = sphere.p * gravity * sphere.Vsub;
 }
 
 void PhysicsInit() {
@@ -153,7 +162,8 @@ void PhysicsUpdate(float dt) {
 	particleToFloatConverter();
 	ClothMesh::updateClothMesh(vertArray);
 
-	float sphereRadius = 1;
+	sphereRadius = 1;
+	applyForces();
 	moveBall(dt);
 	Sphere::updateSphere(sphere.pos, sphereRadius);
 
