@@ -52,7 +52,7 @@ float* freq = new float[numberOfWaves];
 float springColumn = 0.76f;
 float springRow = 0.58f;
 float fluidHeight = 3;
-float fluidDensity = 10;
+float fluidDensity = 5;
 
 class Ball {
 public:
@@ -61,6 +61,7 @@ public:
 	glm::vec3 velocity;
 	glm::vec3 totalForce{ 0, -gravity, 0 };
 	float mass = 1;
+	float volume;
 	float Vsub;//Volume of the sphere that is flooded
 
 };
@@ -118,37 +119,50 @@ glm::vec3 buoyanceF, dragF;
 void applyForces(float time) {
 	//calculate wave height
 	glm::vec3 ballXZpos = { ball.pos.x, 0 , ball.pos.z };
-	float waveH = fluidHeight;
+	float waveH = fluidHeight; //wave height in the ball position
 	for (int i = 0; i < numberOfWaves; ++i) {
 		waveH += waves[i].A * glm::cos(glm::dot(waves[i].k, ballXZpos) - (waves[i].w * time));
 	}
 	
-	//if(sumergida 0,25,75,full%)... - apliquem les diferents formules que calguin
+	float h = 0; // sphere cap height
+	float r = 0; // sphere cap radius
+	float volumeSub = 0; //sphere volume submerged
 	if (ball.pos.y - ball.rad >= waveH) { //no s'esta submergint
-
+		
 	}
 
 	else if (ball.pos.y >= waveH) { //esta submergida menys de la meitat
-
+		h = waveH - (ball.pos.y - ball.rad);
+		volumeSub = (3.14 * h * h * (3 * ball.rad - h)) / 3;
+		r = sqrt(pow(ball.rad, 2) - pow(ball.rad - h, 2));
 	}
 
 	else if (ball.pos.y + ball.rad > waveH) { //esta sumergida mes de la meitat pero no tota
-
+		h = ball.pos.y + ball.rad - waveH;
+		volumeSub = (3.14 * h * h * (3 * ball.rad - h)) / 3;
+		volumeSub = ball.volume - volumeSub;
+		r = ball.rad;
 	}
 
 	else { //esta tota submergida
-
+		volumeSub = ball.volume;
+		r = ball.rad;
 	}
-	//calcular bouyance
-	float volume;
-	glm::vec3 multiplyOnY = { 0,1,0 };
-	buoyanceF = fluidDensity*gravity*multiplyOnY; //potser cal variar la densitat del fluid, potser la gravetat es negativa
-	//calcular drag force
-	dragF = { 0,0,0 };
-	//sumar totes les forces
-	ball.totalForce = buoyanceF + dragF;
 
-	//sphere.bForce = sphere.p * gravity * sphere.Vsub;
+	//calcular bouyance
+	glm::vec3 multiplyOnY = { 0,1,0 };
+	buoyanceF = fluidDensity*gravity*volumeSub*multiplyOnY; //potser cal variar la densitat del fluid, potser la gravetat es negativa
+
+	//calcular drag force
+	float a = 3.14 * pow(r, 2);
+	dragF = -(1/2) * fluidDensity * 0.47f * a * glm::length(ball.velocity)*ball.velocity;
+	//sumar totes les forces
+	glm::vec3 gravityForce = { 0,-gravity*ball.mass,0 };
+	ball.totalForce = buoyanceF + dragF + gravityForce;
+
+	//if (ball.pos.y - ball.rad >= waveH) { //no s'esta submergint
+	//	ball.totalForce = gravityForce;
+	//}
 }
 
 void PhysicsInit() {
@@ -185,7 +199,7 @@ void PhysicsUpdate(float dt) {
 	ClothMesh::updateClothMesh(vertArray);
 
 	
-	applyForces(dt);
+	applyForces(acumulateTime);
 	moveBall(dt);
 	Sphere::updateSphere(ball.pos, ball.rad);
 
@@ -207,8 +221,8 @@ void GUI() {
 		ImGui::Text("Waves parameters: ");
 		ImGui::Text("   Wave 1      Wave 2       Wave 3");
 		ImGui::SliderFloat3("Amplitude", ampli, 0.f, 1.f, "%.1f");
-		ImGui::SliderFloat3("Wave X", waveX, 0.f, 1.f, "%.2f");
-		ImGui::SliderFloat3("Wave Z", waveZ, 0.f, 1.f, "%.2f");
+		ImGui::SliderFloat3("Wave X", waveX, 0.1f, 1.f, "%.2f");
+		ImGui::SliderFloat3("Wave Z", waveZ, 0.1f, 1.f, "%.2f");
 		ImGui::SliderFloat3("Frequency", freq, 0.f, 10.f, "%.3f");
 		ImGui::Separator();
 		ImGui::Text("Sphere parameters: ");
