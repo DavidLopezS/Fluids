@@ -57,12 +57,14 @@ float fluidDensity = 10;
 class Ball {
 public:
 	glm::vec3 pos = {0, 8, 0};//Posicio incial de l'esfera
+	float rad = 1;
 	glm::vec3 velocity;
 	glm::vec3 totalForce{ 0, -gravity, 0 };
 	float mass = 1;
 	float Vsub;//Volume of the sphere that is flooded
 
 };
+Ball ball;
 
 void initializeCloth() {
 	fluidSurface[0].initPos = fluidSurface[0].pos = { -(13 * springColumn / 2), 0,-(17 * springRow / 2) };
@@ -102,21 +104,41 @@ void manageWave(float a, float wX, float wZ, float f, int waveN) {
 
 }
 
-Ball sphere;
+
 void moveBall(float time) {
 	//Actualitzar la velocitat
-	sphere.velocity = sphere.velocity + sphere.totalForce*time/sphere.mass;
+	ball.velocity = ball.velocity + ball.totalForce*time/ball.mass;
 
 	//Actualitzar posicio
-	sphere.pos = sphere.pos + sphere.velocity * time;
+	ball.pos = ball.pos + ball.velocity * time;
 }
 
 glm::vec3 buoyanceF, dragF;
 //http://www.1728.org/spher2.png +++++++++++ http://mathworld.wolfram.com/images/eps-gif/SphericalCap_1001.gif
-void applyForces() {
-
+void applyForces(float time) {
+	//calculate wave height
+	glm::vec3 ballXZpos = { ball.pos.x, 0 , ball.pos.z };
+	float waveH = fluidHeight;
+	for (int i = 0; i < numberOfWaves; ++i) {
+		waveH += waves[i].A * glm::cos(glm::dot(waves[i].k, ballXZpos) - (waves[i].w * time));
+	}
+	
 	//if(sumergida 0,25,75,full%)... - apliquem les diferents formules que calguin
+	if (ball.pos.y - ball.rad >= waveH) { //no s'esta submergint
 
+	}
+
+	else if (ball.pos.y >= waveH) { //esta submergida menys de la meitat
+
+	}
+
+	else if (ball.pos.y + ball.rad > waveH) { //esta sumergida mes de la meitat pero no tota
+
+	}
+
+	else { //esta tota submergida
+
+	}
 	//calcular bouyance
 	float volume;
 	glm::vec3 multiplyOnY = { 0,1,0 };
@@ -124,7 +146,7 @@ void applyForces() {
 	//calcular drag force
 	dragF = { 0,0,0 };
 	//sumar totes les forces
-	sphere.totalForce = buoyanceF + dragF;
+	ball.totalForce = buoyanceF + dragF;
 
 	//sphere.bForce = sphere.p * gravity * sphere.Vsub;
 }
@@ -162,10 +184,10 @@ void PhysicsUpdate(float dt) {
 	particleToFloatConverter();
 	ClothMesh::updateClothMesh(vertArray);
 
-	sphereRadius = 1;
-	applyForces();
+	
+	applyForces(dt);
 	moveBall(dt);
-	Sphere::updateSphere(sphere.pos, sphereRadius);
+	Sphere::updateSphere(ball.pos, ball.rad);
 
 }
 void PhysicsCleanup() {
