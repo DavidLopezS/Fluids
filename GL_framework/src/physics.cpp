@@ -10,12 +10,10 @@
 
 bool show_test_window = false;
 
-float sphereRadius = rand() % 3 + 0.5f;
-glm::vec3 spherePos = { rand() % 7 - 3, rand() % 7 + 1 - sphereRadius, rand() % 7 - 3 };
 float gravity = 9.8;
 
 namespace Sphere {
-	extern void updateSphere(glm::vec3 pos /*= spherePos*/, float radius /*= sphereRadius*/);
+	extern void updateSphere(glm::vec3 pos, float radius);
 }
 
 namespace ClothMesh {
@@ -56,12 +54,12 @@ float fluidDensity = 5;
 
 class Ball {
 public:
-	glm::vec3 pos = {0, 8, 0};//Posicio incial de l'esfera
+	glm::vec3 pos;//Posicio incial de l'esfera
 	float rad = 1;
 	glm::vec3 velocity;
-	glm::vec3 totalForce{ 0, -gravity, 0 };
+	glm::vec3 totalForce{ 0, 0, 0 };
 	float mass = 1;
-	float volume;
+	float volume = (4.f*3.14f*pow(rad,3))/3;
 	float Vsub;//Volume of the sphere that is flooded
 
 };
@@ -75,6 +73,12 @@ void initializeCloth() {
 			
 		}
 	}
+}
+
+void initializeBall() {
+	ball.pos = { rand() % 7 - 3,8,rand() % 7 - 3 };
+	ball.velocity = { 0,0,0 };
+	ball.totalForce = { 0,0,0 };
 }
 
 void particleToFloatConverter() {
@@ -115,7 +119,6 @@ void moveBall(float time) {
 }
 
 glm::vec3 buoyanceF, dragF;
-//http://www.1728.org/spher2.png +++++++++++ http://mathworld.wolfram.com/images/eps-gif/SphericalCap_1001.gif
 void applyForces(float time) {
 	//calculate wave height
 	glm::vec3 ballXZpos = { ball.pos.x, 0 , ball.pos.z };
@@ -155,7 +158,7 @@ void applyForces(float time) {
 
 	//calcular drag force
 	float a = 3.14 * pow(r, 2);
-	dragF = -(1/2) * fluidDensity * 0.47f * a * glm::length(ball.velocity)*ball.velocity;
+	dragF = -(1.f/2.f) * fluidDensity * 0.47f * a * glm::length(ball.velocity)*ball.velocity;
 	//sumar totes les forces
 	glm::vec3 gravityForce = { 0,-gravity*ball.mass,0 };
 	ball.totalForce = buoyanceF + dragF + gravityForce;
@@ -166,6 +169,7 @@ void applyForces(float time) {
 }
 
 void PhysicsInit() {
+	srand(time(NULL));
 	initializeCloth();
 	//Possar valors predeterminats de la onada
 	ampli[0] = 0.5;
@@ -180,13 +184,18 @@ void PhysicsInit() {
 	waveZ[0] = 0.1;
 	waveZ[1] = 0.1;
 	waveZ[2] = 0.1;
+
+	initializeBall();
 }
 
 float acumulateTime;
 float seconds = 0;
 float secondsUntilRestart = 20;
 void PhysicsUpdate(float dt) {
-	//TODO
+	if (seconds >= secondsUntilRestart) {
+		initializeBall();
+		seconds = 0;
+	}
 	for (int i = 0; i < numberOfWaves; ++i) {
 		manageWave(ampli[i], waveX[i], waveZ[i], freq[i], i);
 	}
@@ -203,6 +212,7 @@ void PhysicsUpdate(float dt) {
 	moveBall(dt);
 	Sphere::updateSphere(ball.pos, ball.rad);
 
+	seconds += dt;
 }
 void PhysicsCleanup() {
 	delete[] fluidSurface;
@@ -218,6 +228,10 @@ void GUI() {
 	{	//FrameRate
 		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 		ImGui::Separator();
+		ImGui::Text("Time simulation parameters: ");
+		ImGui::Text("Seconds %.1f", seconds);
+		ImGui::SliderFloat("Ball restarting time", &secondsUntilRestart, 1, 50, "%.0f");
+		ImGui::Separator();
 		ImGui::Text("Waves parameters: ");
 		ImGui::Text("   Wave 1      Wave 2       Wave 3");
 		ImGui::SliderFloat3("Amplitude", ampli, 0.f, 1.f, "%.1f");
@@ -226,6 +240,7 @@ void GUI() {
 		ImGui::SliderFloat3("Frequency", freq, 0.f, 10.f, "%.3f");
 		ImGui::Separator();
 		ImGui::Text("Sphere parameters: ");
+		ImGui::SliderFloat("Mass", &ball.mass, 1, 50, "%.0f");
 
 		
 	}
