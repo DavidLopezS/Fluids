@@ -131,7 +131,7 @@ void applyForces(float time) {
 	float r = 0; // sphere cap radius
 	float volumeSub = 0; //sphere volume submerged
 	if (ball.pos.y - ball.rad >= waveH) { //no s'esta submergint
-		
+		std::cout << "Not on the water" << std::endl;
 	}
 
 	else if (ball.pos.y >= waveH) { //esta submergida menys de la meitat
@@ -163,9 +163,6 @@ void applyForces(float time) {
 	glm::vec3 gravityForce = { 0,-gravity*ball.mass,0 };
 	ball.totalForce = buoyanceF + dragF + gravityForce;
 
-	//if (ball.pos.y - ball.rad >= waveH) { //no s'esta submergint
-	//	ball.totalForce = gravityForce;
-	//}
 }
 
 void PhysicsInit() {
