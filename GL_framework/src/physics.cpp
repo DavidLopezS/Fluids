@@ -28,7 +28,6 @@ public:
 	glm::vec3 initPos; //x0
 	glm::vec3 pos; //x
 	float yPos;
-	glm::vec3 direction;//Maybe in another class
 };
 Particle* fluidSurface = new Particle[clothLength];
 float* vertArray = new float[clothLength * 3];
